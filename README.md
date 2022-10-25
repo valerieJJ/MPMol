@@ -2,12 +2,11 @@
 
 ## Brief Introduction
 
-We propose to model a molecular as a heterogeneous graph and leverage metapaths to capture latent feature for chemical functional groups. To preserve the chemical environments revealed by metapaths, we construct metapath-based connectivity and decompose the heterogeneous graph into subgraphs according to relation types. Besides, a hierarchical attention strategy is designed to aggregate heterogeneous information at node-level and relation-level. Consequently, our approach is more natural and suitable for learning the complex interactions among atomic nodes and effective molecular fingerprints.
-
-- Metapath
-  ![image](file://D:\0 wan\MPMol\image\fig1.gif?msec=1666696524640)
-- Model architecture
-  ![image](file://D:\0 wan\MPMol\image\fig2.png?msec=1666696524646)
+ We propose to model a molecular as a heterogeneous graph and leverage metapaths to capture latent feature for chemical functional groups. To preserve the chemical environments revealed by metapaths, we construct metapath-based connectivity and decompose the heterogeneous graph into subgraphs according to relation types. Besides, a hierarchical attention strategy is designed to aggregate heterogeneous information at node-level and relation-level. Consequently, our approach is more natural and suitable for learning the complex interactions among atomic nodes and effective molecular fingerprints. 
+ - Metapath
+ ![image](image/fig1.gif)
+ - Model architecture
+  ![image](image/fig2.png)
 
 ## Environment Requirement
 
@@ -21,7 +20,6 @@ Our code is written in Python3.6.13. The required packages are listed in “requ
 ## How to run
 
 - Datasets
-  
   - QM9: Quantum mechanic property
   - ZINC: Molecular solubility
   - ESOL: Molecular solubility
@@ -30,18 +28,15 @@ Our code is written in Python3.6.13. The required packages are listed in “requ
   - MUTAG:Human Tumor Inhibition
   - OGB-molhib: HIV Inhibition
   - OGB-molpacba: Biological Activitiy
+  
 - Search Metapath
   First, serch metapaths from QM9 and ZINC. Please run and see Search_Metapath.ipynb
-  
 - Then train MPMol on QM9 for predicting dipolemoment.
-  
 
 ```
 python src/main.py --model mpmol --dim 64 --epoch 200 --t 0
 ```
-
-Running results:
-
+ Running results:
 ```
 mean:2.6730,std:1.5035
 Epoch: 001, LR: 0.001000, Loss: 0.4220750, Val MAE: 0.5018868, Test MAE: 0.5001504, Test stdMAE: 0.3326619
