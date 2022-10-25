@@ -1,7 +1,7 @@
 from scipy.linalg.interpolative import seed
 import torch
 import torch.nn as nn
-from torch_geometric.nn.conv import GATConv
+from torch_geometric.nn.conv import GATConv,GCNConv
 from torch.nn import Sequential, Linear, ReLU, GRU,Dropout
 from torch_geometric.nn import NNConv, Set2Set
 import torch.nn.functional as F
@@ -39,9 +39,9 @@ class RelationalAttention(nn.Module):
         nodes_embs_out = nodes_embs.sum(1)
         return nodes_embs_out
 
-class RGATConvLayer(nn.Module):
+class MolAtt(nn.Module):
     def __init__(self, in_feat, out_feat, etypes, n_heads, dropout=0.2, activation_fc=None, residual=True):
-        super(RGATConvLayer, self).__init__()
+        super(MolAtt, self).__init__()
 
         self.etypes = etypes
         self.residual = residual
@@ -67,9 +67,9 @@ class RGATConvLayer(nn.Module):
         output = F.elu(output)
         return output
 
-class Network(torch.nn.Module):
+class MPMol(torch.nn.Module):
     def __init__(self, infeat=8, dim=64, edge_dim=6, nheads=8, dropout=0.0, recurs=3):
-        super(Network, self).__init__()
+        super(MPMol, self).__init__()
         self.lin0 = torch.nn.Linear(infeat, dim) 
         self.layers = torch.nn.ModuleList()
         self.edge_dim = edge_dim # 6 
@@ -80,7 +80,7 @@ class Network(torch.nn.Module):
             Linear(128, dim * dim)
         )
         self.dropout = Dropout(dropout)
-        self.layers.append(RGATConvLayer(in_feat=dim, out_feat=int(dim / nheads), etypes=self.edge_dim,
+        self.layers.append(MolAtt(in_feat=dim, out_feat=int(dim / nheads), etypes=self.edge_dim,
                                           n_heads=nheads, dropout=dropout, activation_fc=F.relu))
         self.layers.append(NNConv(dim, dim, nn, aggr='mean'))
         self.gru = GRU(dim, dim)
@@ -97,6 +97,53 @@ class Network(torch.nn.Module):
             m = F.relu(self.layers[1](out, data.edge_index, data.edge_attr)) 
             out, h = self.gru(m.unsqueeze(0), h)
             out = out.squeeze(0)
+        out = self.set2set(out, data.batch)
+        out = F.relu(self.lin1(out))
+        out = self.lin2(out)
+        return out.view(-1)
+
+class GCN(torch.nn.Module):
+    def __init__(self,intdim,dim):
+        super().__init__()
+        self.lin0 = torch.nn.Linear(intdim, dim)
+
+        self.conv1=GCNConv(dim,dim)
+        self.dp1=torch.nn.Dropout(0.5)
+        self.conv2=GCNConv(dim,dim)
+
+
+        self.set2set = Set2Set(dim, processing_steps=3)
+        self.lin1 = torch.nn.Linear(2 * dim, dim)
+        self.lin2 = torch.nn.Linear(dim, 1)
+    def forward(self, data):
+        out = F.relu(self.lin0(data.x))
+        x=self.conv1(out, data.edge_index)
+        x=self.dp1(x)
+        x=torch.relu(x)
+        x=self.conv2(x, data.edge_index)
+        out = self.set2set(out, data.batch)
+        out = F.relu(self.lin1(out))
+        out = self.lin2(out)
+        return out.view(-1)
+class GIN(torch.nn.Module):
+    def __init__(self,intdim,dim):
+        super().__init__()
+        self.lin0 = torch.nn.Linear(intdim, dim)
+
+        self.conv1=GIN(dim,dim)
+        self.dp1=torch.nn.Dropout(0.5)
+        self.conv2=GIN(dim,dim)
+
+
+        self.set2set = Set2Set(dim, processing_steps=3)
+        self.lin1 = torch.nn.Linear(2 * dim, dim)
+        self.lin2 = torch.nn.Linear(dim, 1)
+    def forward(self, data):
+        out = F.relu(self.lin0(data.x))
+        x=self.conv1(out, data.edge_index)
+        x=self.dp1(x)
+        x=torch.relu(x)
+        x=self.conv2(x, data.edge_index)
         out = self.set2set(out, data.batch)
         out = F.relu(self.lin1(out))
         out = self.lin2(out)
