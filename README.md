@@ -4,7 +4,7 @@
 
  We propose to model a molecular as a heterogeneous graph and leverage metapaths to capture latent feature for chemical functional groups. To preserve the chemical environments revealed by metapaths, we construct metapath-based connectivity and decompose the heterogeneous graph into subgraphs according to relation types. Besides, a hierarchical attention strategy is designed to aggregate heterogeneous information at node-level and relation-level. Consequently, our approach is more natural and suitable for learning the complex interactions among atomic nodes and effective molecular fingerprints. 
  - Metapath
- ![image](image/fig1.gif)
+  ![image](image/fig1.gif)
  - Model architecture
   ![image](image/fig2.png)
 
